@@ -7,5 +7,18 @@
         android:orderInCategory="100"
         android:showAsAction="never"
         android:title="@string/action_settings"/>
+    
+    
+    <item
+        android:id="@+id/play_order_item"
+        android:orderInCategory="101"
+        android:showAsAction="never"
+        android:title="顺序播放" />
+    
+    <item
+        android:id="@+id/play_random_item"
+        android:orderInCategory="102"
+        android:showAsAction="never"
+        android:title="随机播放" />"
 
 </menu>

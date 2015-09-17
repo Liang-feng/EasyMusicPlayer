@@ -1,13 +1,21 @@
 package com.example.easymusicplayer1.activity;
 
+import java.util.ArrayList;
+
 import com.example.easymusicplayer1.R;
+import com.example.easymusicplayer1.utility.MyApplication;
+
 import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
 import android.media.MediaPlayer;
 import android.media.MediaPlayer.OnCompletionListener;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.GestureDetector;
 import android.view.GestureDetector.OnGestureListener;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.Button;
@@ -42,6 +50,14 @@ public class PlayMusicActivity extends Activity
 		
 	private GestureDetector gestureDetector;
 	
+	int musicPosition;           //音乐在ListView的item上的位置，从MainActivity传递过来，方便用于进行顺序播放!!!
+	
+	private ArrayList<String> musicTitleList;
+	
+	private ArrayList<String> musicUrlList;
+	
+	private ArrayList<Integer> musicDurationList;
+			
 	
 	@Override
 	public void onCreate(Bundle savedInstanceState)
@@ -64,10 +80,15 @@ public class PlayMusicActivity extends Activity
 	    //获取从MainActivity传来的数据
 		intent = getIntent();      //一定要在函数里面初始化!!!外面初始化就不一样了，详情见博客!!!
 
+		//从 “启动PlayMusicActivity”的活动  获取传递来的数据
 	    Bundle bundle = intent.getExtras();
 	    musicName = bundle.getString("music_title");
 	    musicUrl = intent.getStringExtra("music_url");
 	    musicDuration = intent.getIntExtra("music_duration", 0);
+	    musicPosition = intent.getIntExtra("music_title_position" , 0);
+	    musicTitleList = intent.getStringArrayListExtra("music_title_list");
+	    musicUrlList = intent.getStringArrayListExtra("music_url_list");
+	    musicDurationList = intent.getIntegerArrayListExtra("music_duration_list");
 	    
 	    musicTitle.setText(musicName + "  time: " + musicDuration);
 	    
@@ -76,26 +97,54 @@ public class PlayMusicActivity extends Activity
         initMediaPlayer();
 	    mediaPlayer.start();          //开始播放音乐
 	    
+	    
 	    //监听歌曲是否播放结束
 	    mediaPlayer.setOnCompletionListener(new OnCompletionListener(){
 			@Override
 			public void onCompletion(MediaPlayer mp) {
 				
+				String playOrder = MainActivity.playOrder;           //获取播放顺序
+				
 				try 
 				{
-					mediaPlayer.wait();
+					Thread.sleep(2000);
 				} 
-				catch (InterruptedException e)
-				{
+				catch (InterruptedException e) {
 					e.printStackTrace();
 				}
 				
-				mediaPlayer.start();
-				
+				if(playOrder == "SINGLE_CIRCLE")          //如果设置了单曲循环
+				{
+    				mediaPlayer.start();                    //就直接继续播放了
+				}
+				else if(playOrder == "ORDER_PLAY")        //如果设置了按顺序播放
+				{
+					mediaPlayer.reset();             //重置mediaPlayer，因为下面运行出错，没有这行的话，出错了我才想到要重新设置mediaPlayer!!!
+					musicUrl = musicUrlList.get(musicPosition+1);
+					musicName = musicTitleList.get(musicPosition+1);
+					musicDuration = musicDurationList.get(musicPosition+1);
+					
+					musicPosition = musicPosition + 1;
+					if(musicPosition == musicTitleList.size())          //如果播放的是最后一首，则重新从第一首歌播放!!!
+					{
+						musicPosition = 0;
+					}
+					
+					musicTitle.setText(musicName + "  time: " + musicDuration);
+
+					initMediaPlayer();           //准备播放下一首音乐
+					mediaPlayer.start();         //开始播放音乐!!!
+		
+				}
+				else if(playOrder == "RANDOM_PLAY")
+				{}
+
 			}
 	    });
 	}
 	
+	
+	//准备好播放音乐
 	public void initMediaPlayer()
 	{
 		try
@@ -142,7 +191,7 @@ public class PlayMusicActivity extends Activity
 	
 	
 	
-	
+	//当当前activity被销毁的时候
 	@Override
 	protected void onDestroy()
 	{

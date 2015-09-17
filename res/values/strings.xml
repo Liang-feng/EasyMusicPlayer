@@ -3,6 +3,6 @@
 
     <string name="app_name">MusicTree</string>
     <string name="hello_world">Hello world!</string>
-    <string name="action_settings">Settings</string>
+    <string name="action_settings">单曲循环</string>
 
 </resources>

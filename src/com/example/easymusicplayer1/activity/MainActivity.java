@@ -38,6 +38,9 @@ public class MainActivity extends Activity{
 	
 	Music music = new Music();
 	
+	public static String playOrder = "ORDER_PLAY";            //播放顺序,默认是按顺序播放
+	
+	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
@@ -59,16 +62,17 @@ public class MainActivity extends Activity{
 	    	public void onItemClick(AdapterView<?> parent , View view , int position , long id)
 	    	{
 	    		Intent intent = new Intent(MainActivity.this , PlayMusicActivity.class);
-	    		//intent.putExtra("title" , "");
+	    		
 	    		Bundle bundle = new Bundle();
 	    		bundle.putString("music_title" , musicTitleList.get(position));
 	    		intent.putExtras(bundle);
 	    		intent.putExtra("music_url" , musicUrlList.get(position));
 	    		intent.putExtra("music_duration", musicDurationList.get(position).intValue());
-	    		Log.e("MainActivity", musicDurationList.get(position).toString());
-	    		Log.e("MainActivity" , musicTitleList.get(position));
-	    		Log.e("MainActivity" , musicUrlList.get(position));
-	    		Log.e("MainActivity" , musicIdList.get(position));
+                intent.putExtra("music_title_position" , position);             //传递当前音乐名称在ListView的item上位置，用来方便执行顺序播放！！！
+                intent.putStringArrayListExtra("music_title_list" , musicTitleList);         //传递musicTitleList，用于顺序，随机播放
+                intent.putStringArrayListExtra("music_url_list" , musicUrlList);
+                intent.putIntegerArrayListExtra("music_duration_list" , musicDurationList);
+                
 	    		startActivity(intent);
 	    	}
 	    });
@@ -85,6 +89,8 @@ public class MainActivity extends Activity{
         });
 
 	}
+	
+
 	
 	
 	@Override
@@ -162,22 +168,40 @@ public class MainActivity extends Activity{
 
 	}
 
+	
+	//创建action Bar（操作栏）上的菜单
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
 		// Inflate the menu; this adds items to the action bar if it is present.
-		getMenuInflater().inflate(R.menu.main, menu);
+		getMenuInflater().inflate(R.menu.main , menu);
 		return true;
 	}
 
+	// 点击菜单上的item后就会调用次函数!!!
 	@Override
 	public boolean onOptionsItemSelected(MenuItem item) {
 		// Handle action bar item clicks here. The action bar will
 		// automatically handle clicks on the Home/Up button, so long
 		// as you specify a parent activity in AndroidManifest.xml.
+		
+		
 		int id = item.getItemId();
-		if (id == R.id.action_settings) {
+		
+		if (id == R.id.action_settings)          //单曲循环
+		{
+			playOrder = "SINGLE_CIRCLE";
 			return true;
 		}
+		else if(id == R.id.play_order_item)        //按循序播放
+		{
+			playOrder = "ORDER_PLAY";
+			return true;
+		}
+		else if(id == R.id.play_random_item)          //随机播放
+		{
+			playOrder = "RANDOM_PLAY";
+		}
+		
 		return super.onOptionsItemSelected(item);
 	}
 
