@@ -7,18 +7,22 @@
         android:orderInCategory="100"
         android:showAsAction="never"
         android:title="@string/action_settings"/>
-    
-    
     <item
         android:id="@+id/play_order_item"
         android:orderInCategory="101"
         android:showAsAction="never"
-        android:title="顺序播放" />
-    
+        android:title="顺序播放"/>
     <item
         android:id="@+id/play_random_item"
         android:orderInCategory="102"
         android:showAsAction="never"
-        android:title="随机播放" />"
+        android:title="随机播放"/>
+    <!--orderInCatrgory :设置菜单项的优先顺序，值越大，就越优先-->
+    <!--showAsAction : 设置菜单项显示在actionBar上的形式  -->
+    <item
+        android:id="@+id/play_once_item"
+        android:orderInCategory="103"     
+        android:showAsAction="never"
+        android:title="只播放一次" />
 
 </menu>

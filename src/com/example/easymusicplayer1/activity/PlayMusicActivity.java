@@ -3,19 +3,14 @@ package com.example.easymusicplayer1.activity;
 import java.util.ArrayList;
 
 import com.example.easymusicplayer1.R;
-import com.example.easymusicplayer1.utility.MyApplication;
 
 import android.app.Activity;
-import android.content.Context;
 import android.content.Intent;
 import android.media.MediaPlayer;
 import android.media.MediaPlayer.OnCompletionListener;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.GestureDetector;
 import android.view.GestureDetector.OnGestureListener;
-import android.view.Menu;
-import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.Button;
@@ -92,6 +87,7 @@ public class PlayMusicActivity extends Activity
 	    
 	    musicTitle.setText(musicName + "  time: " + musicDuration);
 	    
+	    
         Toast.makeText(PlayMusicActivity.this , musicUrl , Toast.LENGTH_LONG).show();
 	    //准备好播放
         initMediaPlayer();
@@ -107,11 +103,12 @@ public class PlayMusicActivity extends Activity
 				
 				try 
 				{
-					Thread.sleep(2000);
+					Thread.sleep(2000);             //播放完歌曲后暂停一下
 				} 
 				catch (InterruptedException e) {
 					e.printStackTrace();
 				}
+				
 				
 				if(playOrder == "SINGLE_CIRCLE")          //如果设置了单曲循环
 				{
@@ -119,16 +116,17 @@ public class PlayMusicActivity extends Activity
 				}
 				else if(playOrder == "ORDER_PLAY")        //如果设置了按顺序播放
 				{
+					if(musicPosition == musicTitleList.size() - 1)          //如果播放的是最后一首，则重新从第一首歌播放!!!
+					{
+						musicPosition = -1;
+					}
+					
 					mediaPlayer.reset();             //重置mediaPlayer，因为下面运行出错，没有这行的话，出错了我才想到要重新设置mediaPlayer!!!
 					musicUrl = musicUrlList.get(musicPosition+1);
 					musicName = musicTitleList.get(musicPosition+1);
 					musicDuration = musicDurationList.get(musicPosition+1);
 					
 					musicPosition = musicPosition + 1;
-					if(musicPosition == musicTitleList.size())          //如果播放的是最后一首，则重新从第一首歌播放!!!
-					{
-						musicPosition = 0;
-					}
 					
 					musicTitle.setText(musicName + "  time: " + musicDuration);
 
@@ -137,7 +135,23 @@ public class PlayMusicActivity extends Activity
 		
 				}
 				else if(playOrder == "RANDOM_PLAY")
-				{}
+				{
+					musicPosition =  (int)(Math.random() * (musicTitleList.size()-1));
+					
+					mediaPlayer.reset();             //重置mediaPlayer，因为下面运行出错，没有这行的话，出错了我才想到要重新设置mediaPlayer!!!
+					musicUrl = musicUrlList.get(musicPosition);
+					musicName = musicTitleList.get(musicPosition);
+					musicDuration = musicDurationList.get(musicPosition);
+					
+					musicTitle.setText(musicName + "  time: " + musicDuration);
+
+					initMediaPlayer();           //准备播放下一首随机音乐
+					mediaPlayer.start();         //开始播放音乐!!!
+				}
+				else if(playOrder == "ONCE_PLAY")
+				{
+					//只播放一次，播放完后不进行任何操作!!!
+				}
 
 			}
 	    });

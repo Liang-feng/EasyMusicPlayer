@@ -4,5 +4,8 @@
     <string name="app_name">MusicTree</string>
     <string name="hello_world">Hello world!</string>
     <string name="action_settings">单曲循环</string>
+    <string name="stop">Stop</string>
+    <string name="pause">Pause</string>
+    <string name="play">Play</string>
 
 </resources>

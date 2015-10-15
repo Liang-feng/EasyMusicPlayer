@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import com.example.easymusicplayer1.R;
 import com.example.easymusicplayer1.model.Music;
 
+import android.app.ActionBar;
 import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
@@ -16,6 +17,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnCreateContextMenuListener;
+import android.view.Window;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ArrayAdapter;
@@ -40,10 +42,12 @@ public class MainActivity extends Activity{
 	
 	public static String playOrder = "ORDER_PLAY";            //播放顺序,默认是按顺序播放
 	
+	ActionBar actionBar;
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
+		//requestWindowFeature(Window.FEATURE_LEFT_ICON);
 		setContentView(R.layout.activity_main);
 
 		initMusicTitle();          //获取音乐名称
@@ -87,6 +91,14 @@ public class MainActivity extends Activity{
         		menu.add(0 , 0 , 0 , "删除");
         	}
         });
+        
+        
+        
+        //actionBar
+        actionBar = getActionBar();
+        actionBar.setDisplayShowTitleEnabled(false);   //使App名称不可见,美观
+		actionBar.setDisplayShowHomeEnabled(false);          //使actionBar上最左边的图片不见
+
 
 	}
 	
@@ -200,6 +212,10 @@ public class MainActivity extends Activity{
 		else if(id == R.id.play_random_item)          //随机播放
 		{
 			playOrder = "RANDOM_PLAY";
+		}
+		else if(id == R.id.play_once_item)
+		{
+			playOrder = "ONCE_PLAY";
 		}
 		
 		return super.onOptionsItemSelected(item);
