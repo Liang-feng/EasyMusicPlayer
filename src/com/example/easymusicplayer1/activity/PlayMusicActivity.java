@@ -4,6 +4,7 @@ import java.util.ArrayList;
 
 import com.example.easymusicplayer1.R;
 
+import android.app.ActionBar;
 import android.app.Activity;
 import android.content.Intent;
 import android.media.MediaPlayer;
@@ -53,6 +54,7 @@ public class PlayMusicActivity extends Activity
 	
 	private ArrayList<Integer> musicDurationList;
 			
+	ActionBar actionBar;
 	
 	@Override
 	public void onCreate(Bundle savedInstanceState)
@@ -155,6 +157,11 @@ public class PlayMusicActivity extends Activity
 
 			}
 	    });
+	    
+	    
+	    actionBar = getActionBar();
+	    actionBar.setDisplayShowHomeEnabled(false);
+	    actionBar.setDisplayShowTitleEnabled(false);
 	}
 	
 	

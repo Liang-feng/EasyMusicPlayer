@@ -38,7 +38,7 @@ public class Music {
 	}
 
 	// 删除多媒体数据库中音乐名称的信息即可，因为重新打开app时，调用了initMusicTitle()函数，会初始化musicTitleList，而musicTitleList会被adapter用到，显示在ListView上，
-	// musicTitleList中的元素要想不显示在ListView上，删除数据库中音乐名称即可，其它的不删除也可，有点漏洞！！
+	// musicTitleList中的元素要想不显示在ListView上，根据音乐id删除数据库中音乐的信息
 	public boolean deleteMusicFromMediaStore(String[] musicId) {
 		// 音乐名称从哪里来就应该在哪里删除，找到数据库表源!!!
 		contentResolver.delete(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, MediaStore.Audio.Media._ID + " = ?",
