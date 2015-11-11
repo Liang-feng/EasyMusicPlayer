@@ -2,12 +2,14 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.example.easymusicplayer1"
     android:versionCode="1"
-    android:versionName="1.0" >
+    android:versionName="1.0" xmlns:tools="http://schemas.android.com/tools">
 
     <uses-sdk
         android:minSdkVersion="16"
-        android:targetSdkVersion="19" />
+        android:targetSdkVersion="23" />
 
+ 
+    <uses-permission android:name="android.permission.INTERNET"/>
     <uses-permission android:name="android.permission.WRITE_SETTINGS" />
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
     <!-- 在SDCard中创建与删除文件权限 -->
@@ -35,6 +37,8 @@
             android:name="com.example.easymusicplayer1.activity.MainActivity"
             android:label="@string/app_name"
             android:launchMode="singleInstance" >
+            
+            
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -44,8 +48,10 @@
         <activity android:name="com.example.easymusicplayer1.activity.PlayMusicActivity" 
              android:launchMode="singleInstance"
              >
-            
         </activity>
+        
+        <activity
+            android:name="com.example.easymusicplayer1.activity.SecondActivity" />
         
     </application>
 

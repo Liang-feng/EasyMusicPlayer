@@ -102,7 +102,6 @@ public class MyMusicFragment extends Fragment {
 				startActivity(intent);         // 启动playMusicActivity，即播放音乐的界面
 
 				beginService();               //启动，绑定服务，以及传递数据到servic， 是先运行服务，然后才绑定服务，调用serviceConnection中的onReceive函数
-				Log.e("MainActivity" , "运行到此 ");
 
 			}
 		});
@@ -151,7 +150,7 @@ public class MyMusicFragment extends Fragment {
 					musicIdList.remove(index); // 删除musicIdList中有关歌曲的id
 					musicDurationList.remove(index); // 删除musicDurationList中有关歌曲的时长
 
-					adapter.notifyDataSetChanged(); // 通知adapter有数据改变
+					adapter.notifyDataSetChanged(); // 通知adapter有数据改变 ,  重新通知adapter读取数据吧!!!
 
 				} else {
 					Toast.makeText(getActivity(), "删除歌曲失败", Toast.LENGTH_LONG).show();

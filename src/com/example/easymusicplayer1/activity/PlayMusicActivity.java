@@ -18,6 +18,7 @@ import android.os.Bundle;
 import android.os.IBinder;
 import android.util.Log;
 import android.view.GestureDetector;
+import android.view.MenuItem;
 import android.view.GestureDetector.OnGestureListener;
 import android.view.MotionEvent;
 import android.view.View;
@@ -41,7 +42,9 @@ public class PlayMusicActivity extends Activity implements OnGestureListener
 
 	static Boolean play = false; // 用来记录当前的图片是“播放”图片，还是暂停“图片”
 
-	static MediaPlayer mediaPlayer = null;        
+	static MediaPlayer mediaPlayer = null;     
+	
+	//static MediaPlayer mediaPlayer = new MediaPlayer();     
 
 	Intent intent; // 用于获取从MyMusicFragment中的intent
 
@@ -76,7 +79,7 @@ public class PlayMusicActivity extends Activity implements OnGestureListener
 		@Override
 		public void onServiceDisconnected(ComponentName name) {
 			// TODO Auto-generated method stub
-
+			
 		}
 
 		@Override
@@ -91,16 +94,9 @@ public class PlayMusicActivity extends Activity implements OnGestureListener
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.play_music);
 		
-		Log.e("MainActivity" , "PlayMusicActivity里面");
-
-		actionBar = getActionBar();
-		actionBar.setDisplayShowHomeEnabled(false);
-		actionBar.setDisplayShowTitleEnabled(false);
-
-		musicTitle = (TextView) findViewById(R.id.music_title);
-		play_pause = (ImageView) findViewById(R.id.music_play);
-		playlist = (ImageView) findViewById(R.id.music_playlist);
-
+        initActionBar();
+        
+		initView();
 		
 		play_pause.setOnClickListener(new OnClickListener() { // 设置点击图片时候的监听事件
 			//检查过了，貌似也没有bug，具体还要测试一下才知道!!!
@@ -131,7 +127,6 @@ public class PlayMusicActivity extends Activity implements OnGestureListener
 				}
 			}
 		});
-
 		
 		// 获取手势实例
 		gestureDetector = new GestureDetector(PlayMusicActivity.this);
@@ -142,7 +137,16 @@ public class PlayMusicActivity extends Activity implements OnGestureListener
 
 		Toast.makeText(PlayMusicActivity.this, musicName, Toast.LENGTH_LONG).show();
 
+
 		initMediaPlayer(); // 准备好播放
+		//Log.e("MainActivity" , "PlayMusicActivity里面");
+
+		if(mediaPlayer != null)
+		Log.e("MainActivity" , mediaPlayer.toString());
+		
+		System.out.println("mediaPlayer = " + mediaPlayer);
+		Log.e("MainActivity" , "PlayMusicActivity里面");
+
 		mediaPlayer.start(); // 开始播放音乐
 
 		
@@ -216,8 +220,45 @@ public class PlayMusicActivity extends Activity implements OnGestureListener
 	}
 	
 	
+	
+	/**
+	 * ActionBar的相关设置
+	 */
+    private void initActionBar() {
+    	actionBar = getActionBar();
+		actionBar.setDisplayShowHomeEnabled(false);        //设置ActionBar左侧的图标不可见
+		actionBar.setDisplayShowTitleEnabled(false);       //设置ActionBar左侧的标题不可见
+		actionBar.setDisplayHomeAsUpEnabled(true);         //设置ActionBar左侧的返回上一级的图标显示出来!!!
+	}
 
-	 public static  int playLastMusic()
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+    	switch(item.getItemId())
+    	{
+    	case android.R.id.home:               //给ActionBar左侧返回图标设置事件
+    		finish();
+    		break;
+    		
+    		default:
+    			break;
+    	}
+    	return super.onOptionsItemSelected(item);
+    }
+
+
+
+	/**
+     * 绑定,获取控件
+     */
+	 private void initView() {
+	    	 musicTitle = (TextView) findViewById(R.id.music_title);
+			play_pause = (ImageView) findViewById(R.id.music_play);
+			playlist = (ImageView) findViewById(R.id.music_playlist);
+	}
+
+
+
+	public static  int playLastMusic()
 	 {
 		if (musicPosition - 1 <= 0) // 如果目前在播放第一首歌，点击上一首的话，那么就播放最后一首
 		{
@@ -303,7 +344,7 @@ public class PlayMusicActivity extends Activity implements OnGestureListener
 	// no bug 准备好播放音乐
 	public static void initMediaPlayer() {
 		try {
-		    if(mediaPlayer == null)
+		   if(mediaPlayer == null)
 			{
 				mediaPlayer = new MediaPlayer();
 			}
@@ -324,7 +365,7 @@ public class PlayMusicActivity extends Activity implements OnGestureListener
 			mediaPlayer.stop();           // 停止播放
 			//当Mediaplayer对象不再被使用时，最好调用release（）方法对其进行释放，使其处于结束状态，此时它不能被使用
 			mediaPlayer.release();//释放与mediaPlayer相关的资源 ， 释放后一定要设置为null// Set the MediaPlayer to null to avoid IlLegalStateException 
-		    mediaPlayer = null;
+		   mediaPlayer = null;
 		}
 		
 		unbindService(serviceConnection);   //解绑service
