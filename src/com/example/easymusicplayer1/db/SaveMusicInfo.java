@@ -25,8 +25,8 @@ public class SaveMusicInfo {
 
 		if (music.getSongName() != null) // 防止在读取数据库中的音乐名称时，有null元素，返回赋值给ArrayList，arrayList不能有空元素，即null元素!!!
 		{
-			Log.e("SaveMusicInfo" , music.getSongName());
-            System.out.println(music.getSongName() + "\n");
+			//Log.e("SaveMusicInfo" , music.getSongName());
+            //System.out.println(music.getSongName() + "\n");
 			// 装载将要存储在数据库里面的数据
 			ContentValues contentValues = new ContentValues();
 			contentValues.put("albumid", music.getAlbumId());

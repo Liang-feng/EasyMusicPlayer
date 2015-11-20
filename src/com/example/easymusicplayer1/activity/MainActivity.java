@@ -9,8 +9,6 @@ import org.apache.http.Header;
 
 import com.example.easymusicplayer1.R;
 import com.example.easymusicplayer1.model.Music;
-import com.example.easymusicplayer1.model.MusicTopFragment;
-import com.example.easymusicplayer1.model.MyMusicFragment;
 import com.example.easymusicplayer1.utility.DataDipose;
 import com.loopj.android.http.AsyncHttpResponseHandler;
 import android.annotation.SuppressLint;
@@ -21,6 +19,7 @@ import android.app.Activity;
 import android.app.FragmentTransaction;
 import android.content.Context;
 import android.content.Intent;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.ContextMenu;
@@ -53,10 +52,8 @@ public class MainActivity extends Activity{
 	
 	Context mContext;
 	
-	/**
-	 * 调用第三方API函数
-	 */
-	final AsyncHttpResponseHandler resHandler=new AsyncHttpResponseHandler(){
+
+	AsyncHttpResponseHandler resHandler = new AsyncHttpResponseHandler(){
 		public void onFailure(int statusCode, Header[] headers, byte[] responseBody, Throwable e) {
 			//鍋氫竴浜涘紓甯稿鐞�
 			e.printStackTrace();
@@ -78,6 +75,7 @@ public class MainActivity extends Activity{
 			
 	}};
 
+
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -88,17 +86,8 @@ public class MainActivity extends Activity{
 		mContext = MainActivity.this;
 		initActionBar();       //对ActionBar属性进行相关设置，以及增加Tab导航，tab导航的监听事件
 		
-		/**
-		 * 开启子线程，用于从网络获取数据!!!
-		 */
-		new Thread(new Runnable() {
-			
-			@Override
-			public void run() {
-				requestDataFromInternet();            //提前开始进行网络请求，防止反应不过来，arrayList为空,而报错!!!
+		requestDataFromInternet();            //提前开始进行网络请求，防止反应不过来，arrayList为空,而报错!!!
 
-			}
-		}).start();
 	}
 	
 	
@@ -169,12 +158,25 @@ public class MainActivity extends Activity{
 	 */
 	public void requestDataFromInternet()
 	{
-		 new com.example.easymusicplayer1.showapi.ShowApiRequest( "http://route.showapi.com/213-4", "11961", "1a1ee362464b4cd6beb9f69c43787f86")
-		 .setResponseHandler(resHandler)
-		  //.addTextPara("keyword", "昨夜小楼又东风")
-		 .addTextPara("topid" , "5")
-		 .post();
 		 
+		 
+	new Thread(new Runnable() {
+			
+			/**
+			 * 开启子线程  , 调用第三方API函数
+			 */
+			@Override
+			public void run() {
+				// TODO Auto-generated method stub
+				Log.e("MainActivity" , "运行到子线程内部");
+				 new com.example.easymusicplayer1.showapi.ShowApiRequest( "http://route.showapi.com/213-4", "11961", "1a1ee362464b4cd6beb9f69c43787f86")
+				 .setResponseHandler(resHandler)
+				  //.addTextPara("keyword", "昨夜小楼又东风")
+				 .addTextPara("topid" , "5")
+				 .post();
+			}
+		}).start();
+		
 	}
 
 
@@ -249,4 +251,13 @@ public class MainActivity extends Activity{
 		this.deleteDatabase("/data/data/com.example.easymusicplayer1/databases/MusicStore.db");
 		super.onDestroy();
 	}
+
+
+    @Override
+    public void onBackPressed() {
+    	super.onBackPressed();
+    }
+    
+    
+    
 }

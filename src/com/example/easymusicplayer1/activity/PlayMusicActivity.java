@@ -64,13 +64,13 @@ public class PlayMusicActivity extends Activity implements OnGestureListener
 
 	private static ArrayList<Integer> musicDurationList; // 存储音乐的播放时长
 
-	String playOrder = MainActivity.playOrder; // 每次从MyMusicFragment选歌时 ， 获取播放顺序
+	static String playOrder = MainActivity.playOrder; // 每次从MyMusicFragment选歌时 ， 获取播放顺序
 												// , 要不要考虑改一下，改成静态函数，或者new
 												// 一个对象来调用函数返回？？
 
 	ActionBar actionBar;
 
-	MusicForegroundService1.MusicBinder musicBinder; // 可以通过musicBinder实例调用service中的函数，对service进行操作
+	private static MusicForegroundService1.MusicBinder musicBinder;      //可以通过musicBinder实例调用service中的函数，对service进行操作
 
 	Intent serviceIntent; // 用于绑定服务
 
@@ -96,37 +96,8 @@ public class PlayMusicActivity extends Activity implements OnGestureListener
 		
         initActionBar();
         
-		initView();
+		initView();                //绑定,获取控件,以及控件的监听事件
 		
-		play_pause.setOnClickListener(new OnClickListener() { // 设置点击图片时候的监听事件
-			//检查过了，貌似也没有bug，具体还要测试一下才知道!!!
-			@Override
-			public void onClick(View v) {
-				if (play == true) {
-					play_pause.setImageResource(R.drawable.ic_pause_circle_outline_white_48dp); // 点击“播放图片”把图片置换为“暂停”图片
-					play = false; // 标记当前的图片为“暂停”图片
-					
-					if (!mediaPlayer.isPlaying()) {
-						mediaPlayer.start();
-					}
-
-					musicBinder.changeMusicPlayOrPausePic(play); // 前台播放图片 与
-																	// PlayMusicActivity中的播放图片同步
-				} else if (play == false) {
-					play_pause.setImageResource(R.drawable.ic_play_circle_outline_white_48dp); // 点击“暂停图片”把图片置换为“播放”图片
-					play = true; // 标记当前的图片为“播放”图片
-
-					//slowDecreaseVolume();             //在点击播放按钮时，缓慢降低音乐声音!!!
-
-					if (mediaPlayer.isPlaying()) // 如果歌曲正在播放，则暂停播放
-					{
-						mediaPlayer.pause();
-					}
-
-					musicBinder.changeMusicPlayOrPausePic(play); // 前台播放图片 与PlayMusicActivity中的播放图片同步
-				}
-			}
-		});
 		
 		// 获取手势实例
 		gestureDetector = new GestureDetector(PlayMusicActivity.this);
@@ -141,82 +112,10 @@ public class PlayMusicActivity extends Activity implements OnGestureListener
 		initMediaPlayer(); // 准备好播放
 		//Log.e("MainActivity" , "PlayMusicActivity里面");
 
-		if(mediaPlayer != null)
-		Log.e("MainActivity" , mediaPlayer.toString());
-		
-		System.out.println("mediaPlayer = " + mediaPlayer);
-		Log.e("MainActivity" , "PlayMusicActivity里面");
-
-		mediaPlayer.start(); // 开始播放音乐
-
-		
-		mediaPlayer.setOnCompletionListener(new OnCompletionListener() { // 监听歌曲是否播放结束
-			//已经检查过一次，貌似没有bug了，具体的还要测试一下才知道!!!
-			@Override
-			public void onCompletion(MediaPlayer mp) {
-
-				try {
-					Thread.sleep(1000); // 播放完歌曲后暂停一下
-				} catch (InterruptedException e) {
-					e.printStackTrace();
-				}
-
-				if (playOrder == "SINGLE_CIRCLE") // 如果设置了单曲循环 
-				{
-					mediaPlayer.start(); // 就直接继续播放了
-				} else if (playOrder == "ORDER_PLAY") // 如果从一首不能播放的跳到，一个不能播放的音乐文件，相当于，播放完毕，所以前台服务，与PlayMusicActivity会同步变化歌曲名称!!!
-				{
-					if (musicPosition == musicTitleList.size() - 1) // 如果播放的是最后一首，则重新从第一首歌播放!!!
-					{
-						musicPosition = -1;
-					}
-
-					mediaPlayer.reset(); // 重置mediaPlayer，因为下面运行出错，没有这行的话，出错了我才想到要重新设置mediaPlayer!!!
-					//mediaPlayer.release();         //释放资源
-					musicUrl = musicUrlList.get(musicPosition + 1);
-					musicName = musicTitleList.get(musicPosition + 1);
-					musicDuration = musicDurationList.get(musicPosition + 1);
-
-					musicPosition = musicPosition + 1;
-
-					musicTitle.setText(musicName);
-
-					initMediaPlayer(); // 准备播放下一首音乐
-					mediaPlayer.start(); // 开始播放音乐!!!
-
-					// 传递参数，是为了更新musicPosition的位置，musicTitleList貌似多余了，MyMusicFragment调用的话就不多余
-					musicBinder.changeMusicTitle(musicTitleList, musicPosition); // 按顺序播放到下一首歌曲就修改前台服务的音乐名称!!!
-
-				} else if (playOrder == "RANDOM_PLAY") {
-					musicPosition = (int) (Math.random() * (musicTitleList.size() - 1));
-
-					mediaPlayer.reset(); // 重置mediaPlayer，因为下面运行出错，没有这行的话，出错了我才想到要重新设置mediaPlayer!!!
-					//mediaPlayer.release();         //释放资源        也释放掉了mediaPlayer实例，所以会报错!!!
-
-					musicUrl = musicUrlList.get(musicPosition);
-					musicName = musicTitleList.get(musicPosition);
-					musicDuration = musicDurationList.get(musicPosition);
-
-					musicTitle.setText(musicName + "  time: " + musicDuration);
-
-					initMediaPlayer(); // 准备播放下一首随机音乐
-					mediaPlayer.start(); // 开始播放音乐!!!
-
-					musicBinder.changeMusicTitle(musicTitleList, musicPosition); // 按随机播放到另一首歌曲就修改前台服务的音乐名称!!!
-
-				} else if (playOrder == "ONCE_PLAY") {
-					// 只播放一次，播放完后不进行任何操作!!!
-					play = true;
-					play_pause.setImageResource(R.drawable.ic_play_circle_outline_white_48dp);
-					musicBinder.changeMusicPlayOrPausePic(play);
-				}
-
-			}
-		});
 
 		// 与MusicForegroundService1绑定 ，为了可以在歌曲按顺序播放，或者是循环播放，或者是随机播放时，可以改变前台服务的歌曲名称
 		serviceIntent = new Intent(PlayMusicActivity.this, MusicForegroundService1.class);
-		bindService(serviceIntent, serviceConnection, 0);
+		bindService(serviceIntent, serviceConnection, 0);                 
 	}
 	
 	
@@ -236,9 +135,10 @@ public class PlayMusicActivity extends Activity implements OnGestureListener
     	switch(item.getItemId())
     	{
     	case android.R.id.home:               //给ActionBar左侧返回图标设置事件
-    		finish();
+    		finish();                         //结束activity
+    		Intent intent = new Intent(PlayMusicActivity.this , MainActivity.class);        //为了能够在后台也能进入到MainActivity界面!!!
+    		startActivity(intent);
     		break;
-    		
     		default:
     			break;
     	}
@@ -248,12 +148,42 @@ public class PlayMusicActivity extends Activity implements OnGestureListener
 
 
 	/**
-     * 绑定,获取控件
+     * 绑定,获取控件,以及控件的监听事件
      */
 	 private void initView() {
 	    	 musicTitle = (TextView) findViewById(R.id.music_title);
 			play_pause = (ImageView) findViewById(R.id.music_play);
 			playlist = (ImageView) findViewById(R.id.music_playlist);
+			
+			play_pause.setOnClickListener(new OnClickListener() { // 设置点击图片时候的监听事件
+				//检查过了，貌似也没有bug，具体还要测试一下才知道!!!
+				@Override
+				public void onClick(View v) {
+					if (play == true) {
+						play_pause.setImageResource(R.drawable.ic_pause_circle_outline_white_48dp); // 点击“播放图片”把图片置换为“暂停”图片
+						play = false; // 标记当前的图片为“暂停”图片
+						
+						if (!mediaPlayer.isPlaying()) {
+							mediaPlayer.start();
+						}
+
+						musicBinder.changeMusicPlayOrPausePic(play); // 前台播放图片 与
+																		// PlayMusicActivity中的播放图片同步
+					} else if (play == false) {
+						play_pause.setImageResource(R.drawable.ic_play_circle_outline_white_48dp); // 点击“暂停图片”把图片置换为“播放”图片
+						play = true; // 标记当前的图片为“播放”图片
+
+						//slowDecreaseVolume();             //在点击播放按钮时，缓慢降低音乐声音!!!
+
+						if (mediaPlayer.isPlaying()) // 如果歌曲正在播放，则暂停播放
+						{
+							mediaPlayer.pause();
+						}
+
+						musicBinder.changeMusicPlayOrPausePic(play); // 前台播放图片 与PlayMusicActivity中的播放图片同步
+					}
+				}
+			});
 	}
 
 
@@ -327,22 +257,37 @@ public class PlayMusicActivity extends Activity implements OnGestureListener
 	public void readDataFromActivity() // 从启动PlayMusicActivity的Activity中读取数据
 	{
 		// 获取从MainActivity传来的数据
-		intent = getIntent(); // 一定要在函数里面初始化!!!外面初始化就不一样了，详情见博客!!!
-		// 从 “启动PlayMusicActivity”的活动 获取传递来的数据
-		Bundle bundle = intent.getExtras();
-		musicName = bundle.getString("music_title");
-		musicUrl = intent.getStringExtra("music_url");
-		musicDuration = intent.getIntExtra("music_duration", 0);
-		musicPosition = intent.getIntExtra("music_title_position", 0);
-		musicTitleList = intent.getStringArrayListExtra("music_title_list");
-		musicUrlList = intent.getStringArrayListExtra("music_url_list");
-		musicDurationList = intent.getIntegerArrayListExtra("music_duration_list");
-
+		intent = getIntent();                       // 一定要在函数里面初始化!!!外面初始化就不一样了，详情见博客!!!
+		String activity = intent.getStringExtra("fragment");
+		
+		if (activity.equals("MyMusicFragment"))
+		{
+			// 从 “启动PlayMusicActivity”的活动 获取传递来的数据
+			Bundle bundle = intent.getExtras();
+			musicName = bundle.getString("music_title");
+			musicUrl = intent.getStringExtra("music_url");
+			musicDuration = intent.getIntExtra("music_duration", 0);
+			musicPosition = intent.getIntExtra("music_title_position", 0);
+			musicTitleList = intent.getStringArrayListExtra("music_title_list");
+			musicUrlList = intent.getStringArrayListExtra("music_url_list");
+			musicDurationList = intent.getIntegerArrayListExtra("music_duration_list");
+		}
+		else if (activity.equals("MusicTopFragment"))
+		{
+			musicName = intent.getStringExtra("music_name");
+			musicUrl = intent.getStringExtra("music_url");
+			musicTitleList = intent.getStringArrayListExtra("music_title_list");
+			musicUrlList = intent.getStringArrayListExtra("music_url_list");
+		}
 	}
 
 	
-	// no bug 准备好播放音乐
+	/**
+	 * 准备好播放音乐 , 以及播放音乐，还有监听音乐是否播放完成，进而选择播放方式
+	 */
+	// no bug 
 	public static void initMediaPlayer() {
+		
 		try {
 		   if(mediaPlayer == null)
 			{
@@ -353,6 +298,80 @@ public class PlayMusicActivity extends Activity implements OnGestureListener
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
+		
+		
+		if(mediaPlayer != null)
+    		Log.e("MainActivity" , mediaPlayer.toString());
+		
+		//System.out.println("mediaPlayer = " + mediaPlayer);
+		//Log.e("MainActivity" , "PlayMusicActivity里面");
+
+		mediaPlayer.start(); // 开始播放音乐
+
+		
+		mediaPlayer.setOnCompletionListener(new OnCompletionListener() { // 监听歌曲是否播放结束
+			//已经检查过一次，貌似没有bug了，具体的还要测试一下才知道!!!
+			@Override
+			public void onCompletion(MediaPlayer mp) {
+
+				try {
+					Thread.sleep(1000); // 播放完歌曲后暂停一下
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
+
+				if (playOrder == "SINGLE_CIRCLE") // 如果设置了单曲循环 
+				{
+					mediaPlayer.start(); // 就直接继续播放了
+				} else if (playOrder == "ORDER_PLAY") // 如果从一首不能播放的跳到，一个不能播放的音乐文件，相当于，播放完毕，所以前台服务，与PlayMusicActivity会同步变化歌曲名称!!!
+				{
+					if (musicPosition == musicTitleList.size() - 1) // 如果播放的是最后一首，则重新从第一首歌播放!!!
+					{
+						musicPosition = -1;
+					}
+
+					mediaPlayer.reset(); // 重置mediaPlayer，因为下面运行出错，没有这行的话，出错了我才想到要重新设置mediaPlayer!!!
+					//mediaPlayer.release();         //释放资源
+					musicUrl = musicUrlList.get(musicPosition + 1);
+					musicName = musicTitleList.get(musicPosition + 1);
+					musicDuration = musicDurationList.get(musicPosition + 1);
+
+					musicPosition = musicPosition + 1;
+
+					musicTitle.setText(musicName);
+
+					initMediaPlayer(); // 准备播放下一首音乐
+					mediaPlayer.start(); // 开始播放音乐!!!
+
+					// 传递参数，是为了更新musicPosition的位置，musicTitleList貌似多余了，MyMusicFragment调用的话就不多余
+					musicBinder.changeMusicTitle(musicTitleList, musicPosition); // 按顺序播放到下一首歌曲就修改前台服务的音乐名称!!!
+
+				} else if (playOrder == "RANDOM_PLAY") {
+					musicPosition = (int) (Math.random() * (musicTitleList.size() - 1));
+
+					mediaPlayer.reset(); // 重置mediaPlayer，因为下面运行出错，没有这行的话，出错了我才想到要重新设置mediaPlayer!!!
+					//mediaPlayer.release();         //释放资源        也释放掉了mediaPlayer实例，所以会报错!!!
+
+					musicUrl = musicUrlList.get(musicPosition);
+					musicName = musicTitleList.get(musicPosition);
+					musicDuration = musicDurationList.get(musicPosition);
+
+					musicTitle.setText(musicName + "  time: " + musicDuration);
+
+					initMediaPlayer(); // 准备播放下一首随机音乐
+					mediaPlayer.start(); // 开始播放音乐!!!
+
+					musicBinder.changeMusicTitle(musicTitleList, musicPosition); // 按随机播放到另一首歌曲就修改前台服务的音乐名称!!!
+
+				} else if (playOrder == "ONCE_PLAY") {
+					// 只播放一次，播放完后不进行任何操作!!!
+					play = true;
+					play_pause.setImageResource(R.drawable.ic_play_circle_outline_white_48dp);
+					musicBinder.changeMusicPlayOrPausePic(play);
+				}
+
+			}
+		});
 	}
 
 	

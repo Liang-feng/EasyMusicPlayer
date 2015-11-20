@@ -1,18 +1,26 @@
-package com.example.easymusicplayer1.model;
+package com.example.easymusicplayer1.activity;
 
 import java.io.File;
 import java.util.ArrayList;
 
-import com.example.easymusicplayer1.activity.PlayMusicActivity;
+import com.example.easymusicplayer1.model.Music;
 import com.example.easymusicplayer1.service.MusicForegroundService1;
 import com.example.easymusicplayer1.service.MusicForegroundService1.MusicBinder;
 import com.example.easymusicplayer1.utility.MyApplication;
+import com.example.easymusicplayer1.utility.ScanMusicFile;
+import com.handmark.pulltorefresh.library.PullToRefreshBase;
+import com.handmark.pulltorefresh.library.PullToRefreshBase.OnRefreshListener;
+import com.handmark.pulltorefresh.library.PullToRefreshListView;
+
 import android.app.Fragment;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.media.MediaScannerConnection;
+import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.Environment;
 import android.os.IBinder;
 import android.util.Log;
 import android.view.ContextMenu;
@@ -26,6 +34,7 @@ import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ArrayAdapter;
 import android.widget.LinearLayout;
+import android.widget.ListAdapter;
 import android.widget.ListView;
 import android.widget.Toast;
 import android.widget.TableLayout.LayoutParams;
@@ -34,7 +43,7 @@ public class MyMusicFragment extends Fragment {
 	
 	private LinearLayout linearLayout = null;
 
-	private ListView musicTitleListView;
+	private PullToRefreshListView musicTitleListView;             //下来刷新的实例
 
 	private ArrayAdapter<String> adapter;
 
@@ -84,9 +93,7 @@ public class MyMusicFragment extends Fragment {
 		new Thread() {                      // 增加子线程，其实不加也没事，看起来界面不卡顿,主要是为了练习一下线程!!!  从Music类中获取musicUrl，musicDuration，musicId
 			@Override
 			public void run() {
-				initMusicUrl(); // 获取音乐路径
-				initMusicDuration(); // 获取音乐时长
-				initMusicId(); // 从数据库中获取音乐在数据库中的Id
+				initMusicData();         //初始化音乐有关数据!!!
 			}
 		}.start();
 
@@ -95,9 +102,9 @@ public class MyMusicFragment extends Fragment {
 			@Override
 			public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
 				
-				musicTitlePosition = position;
+				musicTitlePosition = position - 1;                 //因为加入了下拉刷新，所以要把position 改为 position - 1
 
-				transferDate(position);        //已ListView上的item项的位置为参数，把数据包装，准备传递到PlayMusicActivity
+				transferDate(position - 1);        //已ListView上的item项的位置为参数，把数据包装，准备传递到PlayMusicActivity , 因为加入了下拉刷新，所以要把position 改为 position - 1
 
 				startActivity(intent);         // 启动playMusicActivity，即播放音乐的界面
 
@@ -109,8 +116,8 @@ public class MyMusicFragment extends Fragment {
 		
 		musicTitleListView.setOnCreateContextMenuListener(new OnCreateContextMenuListener() { // 长按Item显示出菜单
 			@Override
-			public void onCreateContextMenu(ContextMenu menu, View v, ContextMenuInfo menuInfo) {
-				menu.add(0, 0, 0, "删除");         //创建菜单项“删除”
+			public void onCreateContextMenu(ContextMenu menu, View v, ContextMenuInfo menuInfo) {				
+				menu.add(0, 0 , 0, "删除");         //创建菜单项“删除”
 			}
 		});
 
@@ -123,6 +130,7 @@ public class MyMusicFragment extends Fragment {
 		music = new Music(); // 不要忘记初始化
 		musicTitleList = new ArrayList<String>();
 		musicTitleList = new ArrayList<String>(music.getMusicTitle());
+		Log.e("MainActivity", musicTitleList.toString());
 	}
 	
 	
@@ -132,23 +140,24 @@ public class MyMusicFragment extends Fragment {
 		// 返回有关ListView的item的有关信息
 		AdapterView.AdapterContextMenuInfo info = (AdapterView.AdapterContextMenuInfo) item.getMenuInfo();
 		
+		//int index = info.position;
 		int index = (int) info.id;      // 获取当前ListView中点击item项的id
 
-		File file = new File(musicUrlList.get(index));
-
+		File file = new File(musicUrlList.get(index-1));       //由于添加了下拉刷新，所以要删除的是index-1，而不是index了!!!
+ 
 		switch (item.getItemId()) {
 		case 0: // 点击菜单项中的"删除"
 
 			if (file.exists() && file.isFile()) {
 				// 删除音乐文件!!! 以及删除数据库中的音乐信息，为了不让其在app重新打开时再一次显示在ListView上!!!
-				if (file.delete() && music.deleteMusicFromMediaStore(new String[] { musicIdList.get(index) })) {
-					Toast.makeText(getActivity(), "已删除歌曲 : " + musicTitleList.get(index), Toast.LENGTH_SHORT).show();
+				if (file.delete() && music.deleteMusicFromMediaStore(new String[] { musicIdList.get(index-1) })) {
+					Toast.makeText(getActivity(), "已删除歌曲 : " + musicTitleList.get(index-1), Toast.LENGTH_SHORT).show();
 					// 进行下面的操作后，这样删除歌曲后，ListView中的item项上移，就不会出现路径错误了!!
-					musicTitleList.remove(index); // 删除ListView的第index项item
+					musicTitleList.remove(index-1); // 删除ListView的第index项item
 													// 这个要放在Toast的后面，不然输出不了,会报错!!!
-					musicUrlList.remove(index); // 删除musicUrlList中有关歌曲的路径信息
-					musicIdList.remove(index); // 删除musicIdList中有关歌曲的id
-					musicDurationList.remove(index); // 删除musicDurationList中有关歌曲的时长
+					musicUrlList.remove(index-1); // 删除musicUrlList中有关歌曲的路径信息
+					musicIdList.remove(index-1); // 删除musicIdList中有关歌曲的id
+					musicDurationList.remove(index-1); // 删除musicDurationList中有关歌曲的时长
 
 					adapter.notifyDataSetChanged(); // 通知adapter有数据改变 ,  重新通知adapter读取数据吧!!!
 
@@ -180,12 +189,56 @@ public class MyMusicFragment extends Fragment {
 				// 下面是对listView进行操作
 				initMusicTitleList(); // 初始化musicTitleList
 				adapter = new ArrayAdapter<String>(getActivity(), android.R.layout.simple_list_item_1, musicTitleList);
-				musicTitleListView = new ListView(getActivity());
+				musicTitleListView = new PullToRefreshListView(getActivity());            //创建下拉刷新的listView实例
 				musicTitleListView.setAdapter(adapter);
+				
+				
+				/**
+				 * //监听当用户下拉刷新时，只要加了监听事件，那么只要不调用结束刷新musicTitleListView.onRefreshComplete();  那么刷新的图标就会一直转动。
+				 *        在AsyncTask中是为了再三秒后，关闭刷新!!!即模拟网络通信!!!
+				 */
+				musicTitleListView.setOnRefreshListener(new OnRefreshListener<ListView>() {       //监听当用户下拉刷新时
+				@Override
+					public void onRefresh(PullToRefreshBase<ListView> refreshView) {
+
+				    new AsyncTask<Void, Void, Void>()
+                        {
+
+							@Override
+							protected Void doInBackground(Void... params) {
+								new ScanMusicFile().scanMusic(getActivity());          //扫描文件   ,把新增加的文件的信息  放进多媒体数据库中
+								
+								try {
+									Thread.sleep(3000);
+								} catch (InterruptedException e) {
+									// TODO Auto-generated catch block
+									e.printStackTrace();
+								}
+								
+								return null;
+							}
+							
+							
+							@Override
+							protected void onPostExecute(Void result) {
+								super.onPostExecute(result);
+								updateMusicDate();                                    //用于在下拉刷新后，更新数据！！！
+								
+								adapter.notifyDataSetChanged();                     //通知adapter，ListView上的数据发生改变!!!
+								musicTitleListView.onRefreshComplete();             //结束刷新动作!!!
+
+							}
+							
+                        }.execute();
+						
+					}
+				});
+				
+				
 				
 				// 设置listView的width和height
 				LayoutParams listViweLayoutParams = new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT);
-				musicTitleListView.setLayoutParams(listViweLayoutParams);
+				musicTitleListView.setLayoutParams(listViweLayoutParams);      
 				// 设置视图
 				linearLayout.addView(musicTitleListView); // 差点忘了加，小心，怪不得没东西出来!!!
 				
@@ -225,6 +278,7 @@ public class MyMusicFragment extends Fragment {
 		intent = new Intent(getActivity(), PlayMusicActivity.class); 
 		Bundle bundle = new Bundle();
 		bundle.putString("music_title", musicTitleList.get(position));
+		intent.putExtra("fragment" , "MyMusicFragment");                            //标明是从MyFragment启动的PlayMusicActivity
 		intent.putExtras(bundle);
 		intent.putExtra("music_url", musicUrlList.get(position));
 		intent.putExtra("music_duration", musicDurationList.get(position).intValue());
@@ -258,5 +312,26 @@ public class MyMusicFragment extends Fragment {
 
 		}
 	}
+	
+	/**
+	 *  初始化音乐有关数据！以及用于在刷新音乐列表后，更新其它数据！！！
+	 */
+	public void initMusicData()
+	{
+		initMusicUrl(); // 获取音乐路径
+		initMusicDuration(); // 获取音乐时长
+		initMusicId(); // 从数据库中获取音乐在数据库中的Id
+	}
+	
+	public void updateMusicDate()
+	{
+		////重新从数据库读取数据
+      //  music = new Music();                              //怪不得，更新不了列表，原来是music没new，导致还是旧的数据!!!
+        initMusicTitleList();                               //不过在initMusicTitleList()开头有new了一个music对象!!!
+		initMusicData();
+        Log.e("MainActivity", "musicTitleList = " + musicTitleList.toString());
+
+	}
+	
 
 }
